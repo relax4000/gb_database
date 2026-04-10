@@ -6,84 +6,76 @@
 
 <style>
 body {
-    font-family: "Georgia", "Times New Roman", serif;
     margin: 0;
-    padding: 40px 20px;
     background-color: #f4f1ea;
     background-image:
         repeating-linear-gradient(45deg, rgba(0,0,0,0.01), rgba(0,0,0,0.01) 1px, transparent 1px, transparent 10px),
         repeating-linear-gradient(-45deg, rgba(0,0,0,0.01), rgba(0,0,0,0.01) 1px, transparent 1px, transparent 10px);
-    display: flex;
-    justify-content: center;
     color: #2b2b2b;
+    font-family: "Georgia", "Times New Roman", serif;
 }
 
-.wrapper {
-    max-width: 100%;
-    transform-origin: top center;
-    padding: 20px;
-}
+.container {
+    width: 600px;
+    max-width: 95%;
+    margin: 40px auto;
+    text-align: center;
 
-.card {
-    background: #fffdf7;
-    padding: 22px;
-    margin-bottom: 30px;
     border: 2px solid #2b2b2b;
+    padding: 30px;
+    background: #fffdf7;
     box-shadow: 4px 4px 0 rgba(0,0,0,0.25);
 }
 
 h1 {
-    margin-top: 0;
-    font-size: 24px;
-    text-transform: uppercase;
+    margin-bottom: 20px;
     border-bottom: 2px solid #2b2b2b;
     padding-bottom: 6px;
-    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 input {
-    width: 100%;
+    width: 80%;
     padding: 10px;
+    background: #fff;
     border: 2px solid #2b2b2b;
+    color: #2b2b2b;
     font-family: inherit;
 }
 
 button {
-    padding: 8px 20px;
-    border: 2px solid #2b2b2b;
+    margin-top: 10px;
+    padding: 10px 20px;
     background: #c7a94f;
+    border: 2px solid #2b2b2b;
+    color: #2b2b2b;
     font-weight: bold;
     cursor: pointer;
     box-shadow: 2px 2px 0 #2b2b2b;
-    margin-top: 16px;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
 }
 
 button:hover {
     background: #b8963d;
 }
 
-.item-attrs-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px 30px;
+.output {
     margin-top: 20px;
-}
-
-.attr {
-    display: flex;
-    justify-content: space-between;
-    padding: 6px 10px;
-    border-bottom: 1px dashed #999;
+    text-align: left;
+    background: #fff;
+    padding: 15px;
+    border: 2px solid #2b2b2b;
+    max-height: 400px;
+    overflow-y: auto;
     font-size: 14px;
 }
 
-.status {
-    text-align: center;
-    margin-top: 10px;
-    font-weight: bold;
+.blink {
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    50% { opacity: 0; }
 }
 </style>
 </head>
