@@ -2,23 +2,28 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Sprawdź TX</title>
+    <title>GB Blockchain Viewer</title>
     <style>
         body { font-family: Arial; padding: 20px; }
         input { width: 400px; padding: 8px; }
         button { padding: 8px 12px; }
-        pre { background: #f4f4f4; padding: 10px; }
+        .card {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f4f4f4;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
 
-<h1>🔍 Sprawdź transakcję</h1>
+<h1>🎮 GB Blockchain Viewer</h1>
 
-<input type="text" id="txid" placeholder="Wklej TXID tutaj">
+<input type="text" id="txid" placeholder="Wklej TXID" 
+       onkeypress="if(event.key==='Enter') sprawdzTx()">
 <button onclick="sprawdzTx()">Szukaj</button>
 
-<h2>Wynik:</h2>
-<pre id="output">Brak danych</pre>
+<div id="output" class="card">Brak danych</div>
 
 <script>
 function sprawdzTx() {
@@ -26,24 +31,74 @@ function sprawdzTx() {
     const output = document.getElementById("output");
 
     if (!txid) {
-        output.textContent = "Podaj TXID!";
+        output.innerHTML = "Podaj TXID!";
         return;
     }
 
-    output.textContent = "Ładowanie...";
+    output.innerHTML = "⏳ Ładowanie...";
 
     fetch(`https://api.whatsonchain.com/v1/bsv/test/tx/hash/${txid}`)
         .then(res => {
-            if (!res.ok) {
-                throw new Error("Nie znaleziono transakcji");
-            }
+            if (!res.ok) throw new Error("Nie znaleziono transakcji");
             return res.json();
         })
         .then(data => {
-            output.textContent = JSON.stringify(data, null, 2);
+
+            let found = null;
+
+            // 🔍 Szukamy OP_RETURN w każdym vout
+            for (let vout of data.vout) {
+                if (
+                    vout.scriptPubKey &&
+                    vout.scriptPubKey.opReturn &&
+                    vout.scriptPubKey.opReturn.parts
+                ) {
+                    for (let part of vout.scriptPubKey.opReturn.parts) {
+                        try {
+                            const parsed = JSON.parse(part);
+                            found = parsed;
+                            break;
+                        } catch (e) {}
+                    }
+                }
+                if (found) break;
+            }
+
+            if (!found) {
+                output.innerHTML = "❌ Nie znaleziono danych JSON w OP_RETURN";
+                return;
+            }
+
+            // 🎮 Ładne wyświetlenie
+            output.innerHTML = `
+                <h2>${found.tytul}</h2>
+                <b>ID:</b> ${found.id} <br>
+                <b>Rok:</b> ${found.rok_wydania} <br><br>
+
+                <h3>Obudowa</h3>
+                Kod: ${found.obudowa.kod} <br>
+                Wytłoczenie: ${found.obudowa.kod_wytloczenia} <br>
+                Przód: ${found.obudowa.kod_obudowy_przod} <br>
+                Tył: ${found.obudowa.kod_obudowy_tyl} <br><br>
+
+                <h3>PCB</h3>
+                Kod PCB: ${found.pcb.kod_pcb} <br><br>
+
+                <h4>ROM</h4>
+                Kod: ${found.pcb.rom.rom_kod} <br>
+                Producent: ${found.pcb.rom.rom_producent} <br>
+                Data: ${found.pcb.rom.rom_data_int} <br><br>
+
+                <h4>MBC</h4>
+                Kod: ${found.pcb.mbc.mbc_kod} <br>
+                Data: ${found.pcb.mbc.mbc_data_int} <br><br>
+
+                <b>Metoda:</b> ${found.metoda_inspekcji} <br>
+                <b>Data wpisu:</b> ${found.data_wpisu}
+            `;
         })
         .catch(err => {
-            output.textContent = "Błąd: " + err.message;
+            output.innerHTML = "❌ Błąd: " + err.message;
         });
 }
 </script>
