@@ -7,92 +7,122 @@
 <style>
 body {
     margin: 0;
-    background-color: #f4f1ea;
+    background-color: #c3cfa1;
     background-image:
-        repeating-linear-gradient(45deg, rgba(0,0,0,0.01), rgba(0,0,0,0.01) 1px, transparent 1px, transparent 10px),
-        repeating-linear-gradient(-45deg, rgba(0,0,0,0.01), rgba(0,0,0,0.01) 1px, transparent 1px, transparent 10px);
-    color: #2b2b2b;
-    font-family: "Courier New", monospace;
+        linear-gradient(to right, rgba(0,0,0,0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0,0,0,0.03) 1px, transparent 1px);
+    background-size: 20px 20px;
+    color: #1b1f16;
+    font-family: "Press Start 2P", monospace;
+    font-size: 12px;
+    line-height: 1.6;
 }
 
+/* lekka „Game Boy ramka” */
 .container {
     width: 600px;
     max-width: 95%;
     margin: 40px auto;
     text-align: center;
 
-    border: 3px solid #2b2b2b;
-    padding: 30px;
-    background: #fffdf7;
-    box-shadow: 4px 4px 0 rgba(0,0,0,0.25);
+    border: 4px solid #1b1f16;
+    padding: 25px;
+    background: #e6e9d2;
+
+    box-shadow:
+        6px 6px 0 #1b1f16,
+        inset 0 0 0 2px #a3ad86;
 }
 
+/* tytuł */
 h1 {
     margin-bottom: 20px;
-    text-shadow: none;
-    border-bottom: 2px solid #2b2b2b;
-    padding-bottom: 6px;
+    border-bottom: 3px solid #1b1f16;
+    padding-bottom: 10px;
+    text-shadow: 2px 2px 0 #a3ad86;
+    letter-spacing: 1px;
 }
 
+/* input */
 input {
-    width: 80%;
+    width: 85%;
     padding: 10px;
-    background: #fff;
-    border: 2px solid #2b2b2b;
-    color: #2b2b2b;
+    background: #dfe6c8;
+    border: 3px solid #1b1f16;
+    color: #1b1f16;
     font-family: inherit;
 }
 
+/* button */
 button {
     margin-top: 10px;
-    padding: 10px 20px;
-    background: #c7a94f;
-    border: 2px solid #2b2b2b;
-    color: #2b2b2b;
+    padding: 10px 15px;
+    background: #a3ad86;
+    border: 3px solid #1b1f16;
+    color: #1b1f16;
     font-weight: bold;
     cursor: pointer;
-    box-shadow: 2px 2px 0 #2b2b2b;
+
+    box-shadow: 3px 3px 0 #1b1f16;
+    transition: transform 0.1s ease;
 }
 
 button:hover {
-    background: #b8963d;
+    transform: translate(-1px, -1px);
 }
 
+button:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 #1b1f16;
+}
+
+/* output */
 .output {
     margin-top: 20px;
     text-align: left;
-    background: #fff;
+    background: #dfe6c8;
     padding: 15px;
-    border: 2px solid #2b2b2b;
+    border: 3px solid #1b1f16;
     max-height: 400px;
     overflow-y: auto;
 }
 
-.blink {
-    animation: blink 1s infinite;
-}
-
-@keyframes blink {
-    50% { opacity: 0; }
-}
-
+/* sekcje */
 .section {
     margin-top: 12px;
-    font-weight: bold;
-    border-top: 1px dashed #999;
-    padding-top: 6px;
+    border-top: 2px dashed #1b1f16;
+    padding-top: 8px;
 }
 
 .section-title {
-    background: #e9e4d8;
     display: inline-block;
-    padding: 2px 6px;
-    border: 1px solid #2b2b2b;
-    margin-bottom: 4px;
+    background: #c3cfa1;
+    padding: 3px 6px;
+    border: 2px solid #1b1f16;
+    margin-bottom: 6px;
 }
 
 .section-content {
-    margin-left: 15px;
+    margin-left: 10px;
+}
+
+/* delikatny „scanline efekt” */
+body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        to bottom,
+        rgba(0,0,0,0.03),
+        rgba(0,0,0,0.03) 1px,
+        transparent 2px,
+        transparent 4px
+    );
+    opacity: 0.4;
 }
     
 </style>
