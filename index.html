@@ -2,10 +2,51 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>GB Database</title>
+    <title>Sprawdź TX</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        input { width: 400px; padding: 8px; }
+        button { padding: 8px 12px; }
+        pre { background: #f4f4f4; padding: 10px; }
+    </style>
 </head>
 <body>
-    <h1>🎮</h1>
-    <p>Działa!</p>
+
+<h1>🔍 Sprawdź transakcję</h1>
+
+<input type="text" id="txid" placeholder="Wklej TXID tutaj">
+<button onclick="sprawdzTx()">Szukaj</button>
+
+<h2>Wynik:</h2>
+<pre id="output">Brak danych</pre>
+
+<script>
+function sprawdzTx() {
+    const txid = document.getElementById("txid").value.trim();
+    const output = document.getElementById("output");
+
+    if (!txid) {
+        output.textContent = "Podaj TXID!";
+        return;
+    }
+
+    output.textContent = "Ładowanie...";
+
+    fetch(`https://api.whatsonchain.com/v1/bsv/test/tx/hash/${txid}`)
+        .then(res => {
+            if (!res.ok) {
+                throw new Error("Nie znaleziono transakcji");
+            }
+            return res.json();
+        })
+        .then(data => {
+            output.textContent = JSON.stringify(data, null, 2);
+        })
+        .catch(err => {
+            output.textContent = "Błąd: " + err.message;
+        });
+}
+</script>
+
 </body>
 </html>
