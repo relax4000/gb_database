@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>GB Viewer</title>
+<title>GB Blockchain Viewer</title>
 
 <style>
 body {
@@ -12,7 +12,7 @@ body {
         repeating-linear-gradient(45deg, rgba(0,0,0,0.01), rgba(0,0,0,0.01) 1px, transparent 1px, transparent 10px),
         repeating-linear-gradient(-45deg, rgba(0,0,0,0.01), rgba(0,0,0,0.01) 1px, transparent 1px, transparent 10px);
     color: #2b2b2b;
-    font-family: "Georgia", "Times New Roman", serif;
+    font-family: "Courier New", monospace;
 }
 
 .container {
@@ -21,7 +21,7 @@ body {
     margin: 40px auto;
     text-align: center;
 
-    border: 2px solid #2b2b2b;
+    border: 3px solid #2b2b2b;
     padding: 30px;
     background: #fffdf7;
     box-shadow: 4px 4px 0 rgba(0,0,0,0.25);
@@ -29,10 +29,9 @@ body {
 
 h1 {
     margin-bottom: 20px;
+    text-shadow: none;
     border-bottom: 2px solid #2b2b2b;
     padding-bottom: 6px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
 }
 
 input {
@@ -67,7 +66,6 @@ button:hover {
     border: 2px solid #2b2b2b;
     max-height: 400px;
     overflow-y: auto;
-    font-size: 14px;
 }
 
 .blink {
@@ -82,21 +80,17 @@ button:hover {
 
 <body>
 
-<div class="wrapper">
+<div class="container">
+    <h1>🎮 GB Viewer</h1>
 
-    <div class="card">
-        <h1>GB Viewer</h1>
+    <input type="text" id="txid" placeholder="Wklej TXID"
+           onkeypress="if(event.key==='Enter') sprawdzTx()">
+    <br>
+    <button onclick="sprawdzTx()">Szukaj</button>
 
-        <input type="text" id="txid" placeholder="Wklej TXID"
-               onkeypress="if(event.key==='Enter') sprawdzTx()">
-
-        <button onclick="sprawdzTx()">Szukaj</button>
-
-        <div id="status" class="status"></div>
+    <div id="output" class="output">
+        <span class="blink">▌</span>
     </div>
-
-    <div id="result"></div>
-
 </div>
 
 <script>
@@ -108,25 +102,32 @@ function hexToString(hex) {
     return str;
 }
 
-function safe(val) {
-    return val ?? "-";
+function safe(v) {
+    return v ?? "-";
+}
+
+function fetchTx(txid) {
+    return fetch(`https://api.whatsonchain.com/v1/bsv/test/tx/hash/${txid}`)
+        .then(res => {
+            if (res.status === 404) {
+                return fetch(`https://api.whatsonchain.com/v1/bsv/main/tx/hash/${txid}`);
+            }
+            return res;
+        });
 }
 
 function sprawdzTx() {
     const txid = document.getElementById("txid").value.trim();
-    const status = document.getElementById("status");
-    const result = document.getElementById("result");
-
-    result.innerHTML = "";
+    const output = document.getElementById("output");
 
     if (!txid) {
-        status.innerHTML = "❌ Podaj TXID";
+        output.innerHTML = "❌ Podaj TXID";
         return;
     }
 
-    status.innerHTML = "⏳ Ładowanie...";
+    output.innerHTML = "⏳ Ładowanie...";
 
-    fetch(`https://api.whatsonchain.com/v1/bsv/test/tx/hash/${txid}`)
+    fetchTx(txid)
         .then(res => {
             if (res.status === 404) throw new Error("TX nie istnieje");
             if (!res.ok) throw new Error("Błąd API");
@@ -135,25 +136,24 @@ function sprawdzTx() {
         .then(data => {
 
             if (!data.vout) {
-                throw new Error("Brak vout w transakcji");
+                throw new Error("Brak vout w TX");
             }
 
             let found = null;
 
             for (let vout of data.vout) {
                 const parts = vout.scriptPubKey?.opReturn?.parts;
-
                 if (!parts) continue;
 
                 for (let part of parts) {
 
-                    // 1.  JSON
+                    // JSON bezpośrednio
                     try {
                         found = JSON.parse(part);
                         break;
                     } catch (e) {}
-                
-                    // 2. HEX → string → JSON
+
+                    // HEX → JSON
                     try {
                         if (/^[0-9a-fA-F]+$/.test(part)) {
                             let decoded = hexToString(part);
@@ -161,55 +161,46 @@ function sprawdzTx() {
                             break;
                         }
                     } catch (e) {}
-                
                 }
 
                 if (found) break;
             }
 
             if (!found) {
-                throw new Error("Brak danych gry w OP_RETURN");
+                throw new Error("Brak danych gry");
             }
 
-            status.innerHTML = "✅ Znaleziono dane";
-
-            result.innerHTML = `
-                <div class="card">
-                    <h1>${safe(found.tytul)}</h1>
-
-                    <div class="item-attrs-grid">
-
-                        <div class="attr"><span>ID</span><span>${safe(found.id)}</span></div>
-                        <div class="attr"><span>Rok</span><span>${safe(found.rok_wydania)}</span></div>
-
-                        <div class="attr"><span>Obudowa kod</span><span>${safe(found.obudowa?.kod)}</span></div>
-                        <div class="attr"><span>Wytłoczenie</span><span>${safe(found.obudowa?.kod_wytloczenia)}</span></div>
-
-                        <div class="attr"><span>Przód</span><span>${safe(found.obudowa?.kod_obudowy_przod)}</span></div>
-                        <div class="attr"><span>Tył</span><span>${safe(found.obudowa?.kod_obudowy_tyl)}</span></div>
-
-                        <div class="attr"><span>PCB</span><span>${safe(found.pcb?.kod_pcb)}</span></div>
-
-                        <div class="attr"><span>ROM kod</span><span>${safe(found.pcb?.rom?.rom_kod)}</span></div>
-                        <div class="attr"><span>ROM prod</span><span>${safe(found.pcb?.rom?.rom_producent)}</span></div>
-
-                        <div class="attr"><span>ROM INT</span><span>${safe(found.pcb?.rom?.rom_data_int)}</span></div>
-                        <div class="attr"><span>ROM Serial</span><span>${safe(found.pcb?.rom?.rom_data_serial)}</span></div>
-
-                        <div class="attr"><span>MBC kod</span><span>${safe(found.pcb?.mbc?.mbc_kod)}</span></div>
-                        <div class="attr"><span>MBC INT</span><span>${safe(found.pcb?.mbc?.mbc_data_int)}</span></div>
-
-                        <div class="attr"><span>MBC Serial</span><span>${safe(found.pcb?.mbc?.mbc_data_serial)}</span></div>
-
-                        <div class="attr"><span>Inspekcja</span><span>${safe(found.metoda_inspekcji)}</span></div>
-                        <div class="attr"><span>Data</span><span>${safe(found.data_wpisu)}</span></div>
-
-                    </div>
-                </div>
+            output.innerHTML = `
+                <h3>${safe(found.tytul)}</h3>
+                ID: ${safe(found.id)} <br>
+                Rok: ${safe(found.rok_wydania)} <br><br>
+            
+                [OBUDOWA]<br>
+                Kod: ${safe(found.obudowa?.kod)}<br>
+                Wytłoczenie: ${safe(found.obudowa?.kod_wytloczenia)}<br>
+                Przód: ${safe(found.obudowa?.kod_obudowy_przod)}<br>
+                Tył: ${safe(found.obudowa?.kod_obudowy_tyl)}<br><br>
+            
+                [PCB]<br>
+                Kod PCB: ${safe(found.pcb?.kod_pcb)}<br><br>
+            
+                [ROM]<br>
+                Kod: ${safe(found.pcb?.rom?.rom_kod)}<br>
+                Producent: ${safe(found.pcb?.rom?.rom_producent)}<br>
+                Data INT: ${safe(found.pcb?.rom?.rom_data_int)}<br>
+                Data Serial: ${safe(found.pcb?.rom?.rom_data_serial)}<br><br>
+            
+                [MBC]<br>
+                Kod: ${safe(found.pcb?.mbc?.mbc_kod)}<br>
+                Data INT: ${safe(found.pcb?.mbc?.mbc_data_int)}<br>
+                Data Serial: ${safe(found.pcb?.mbc?.mbc_data_serial)}<br><br>
+            
+                Metoda inspekcji: ${safe(found.metoda_inspekcji)}<br>
+                Data wpisu: ${safe(found.data_wpisu)}
             `;
         })
         .catch(err => {
-            status.innerHTML = "❌ " + err.message;
+            output.innerHTML = "❌ " + err.message;
         });
 }
 </script>
