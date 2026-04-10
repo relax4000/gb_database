@@ -154,11 +154,22 @@ function sprawdzTx() {
                 if (!parts) continue;
 
                 for (let part of parts) {
+
+                    // 1.  JSON
                     try {
-                        let decoded = hexToString(part);
-                        found = JSON.parse(decoded);
+                        found = JSON.parse(part);
                         break;
                     } catch (e) {}
+                
+                    // 2. HEX → string → JSON
+                    try {
+                        if (/^[0-9a-fA-F]+$/.test(part)) {
+                            let decoded = hexToString(part);
+                            found = JSON.parse(decoded);
+                            break;
+                        }
+                    } catch (e) {}
+                
                 }
 
                 if (found) break;
