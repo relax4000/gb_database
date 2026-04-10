@@ -177,6 +177,10 @@ function sprawdzTx() {
                     try {
                         if (/^[0-9a-fA-F]+$/.test(part)) {
                             let decoded = hexToString(part);
+
+                            if (decoded.startsWith("GB|")) {
+                                decoded = decoded.slice(3);
+                            }
                             found = JSON.parse(decoded);
                             break;
                         }
