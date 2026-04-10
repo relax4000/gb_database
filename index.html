@@ -2,160 +2,211 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>GB Blockchain Viewer</title>
+<title>GB Viewer</title>
 
 <style>
-    body {
-        margin: 0;
-        background: #0f380f;
-        color: #9bbc0f;
-        font-family: "Courier New", monospace;
-    }
+body {
+    font-family: "Georgia", "Times New Roman", serif;
+    margin: 0;
+    padding: 40px 20px;
+    background-color: #f4f1ea;
+    background-image:
+        repeating-linear-gradient(45deg, rgba(0,0,0,0.01), rgba(0,0,0,0.01) 1px, transparent 1px, transparent 10px),
+        repeating-linear-gradient(-45deg, rgba(0,0,0,0.01), rgba(0,0,0,0.01) 1px, transparent 1px, transparent 10px);
+    display: flex;
+    justify-content: center;
+    color: #2b2b2b;
+}
 
-    .container {
-        width: 600px;
-        max-width: 95%;
-        margin: 40px auto; /* 👈 zamiast centrowania */
-        text-align: center;
+.wrapper {
+    max-width: 100%;
+    transform-origin: top center;
+    padding: 20px;
+}
 
-        border: 3px solid #9bbc0f;
-        padding: 30px;
-        background: #306230;
-        box-shadow: 0 0 20px #9bbc0f;
-    }
+.card {
+    background: #fffdf7;
+    padding: 22px;
+    margin-bottom: 30px;
+    border: 2px solid #2b2b2b;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.25);
+}
 
-    h1 {
-        margin-bottom: 20px;
-        text-shadow: 0 0 5px #9bbc0f;
-    }
+h1 {
+    margin-top: 0;
+    font-size: 24px;
+    text-transform: uppercase;
+    border-bottom: 2px solid #2b2b2b;
+    padding-bottom: 6px;
+    text-align: center;
+}
 
-    input {
-        width: 80%;
-        padding: 10px;
-        background: #0f380f;
-        border: 2px solid #9bbc0f;
-        color: #9bbc0f;
-        font-family: inherit;
-    }
+input {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #2b2b2b;
+    font-family: inherit;
+}
 
-    button {
-        margin-top: 10px;
-        padding: 10px 20px;
-        background: #9bbc0f;
-        border: none;
-        color: #0f380f;
-        font-weight: bold;
-        cursor: pointer;
-    }
+button {
+    padding: 8px 20px;
+    border: 2px solid #2b2b2b;
+    background: #c7a94f;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 #2b2b2b;
+    margin-top: 16px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
 
-    button:hover {
-        background: #8bac0f;
-    }
+button:hover {
+    background: #b8963d;
+}
 
-    .output {
-        margin-top: 20px;
-        text-align: left;
-        background: #0f380f;
-        padding: 15px;
-        border: 2px solid #9bbc0f;
-        max-height: 400px;
-        overflow-y: auto;
-    }
+.item-attrs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 30px;
+    margin-top: 20px;
+}
 
-    .blink {
-        animation: blink 1s infinite;
-    }
+.attr {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 10px;
+    border-bottom: 1px dashed #999;
+    font-size: 14px;
+}
 
-    @keyframes blink {
-        50% { opacity: 0; }
-    }
+.status {
+    text-align: center;
+    margin-top: 10px;
+    font-weight: bold;
+}
 </style>
 </head>
 
 <body>
 
-<div class="container">
-    <h1>🎮 GB Viewer</h1>
+<div class="wrapper">
 
-    <input type="text" id="txid" placeholder="Wklej TXID"
-           onkeypress="if(event.key==='Enter') sprawdzTx()">
-    <br>
-    <button onclick="sprawdzTx()">Szukaj</button>
+    <div class="card">
+        <h1>GB Viewer</h1>
 
-    <div id="output" class="output">
-        <span class="blink">▌</span>
+        <input type="text" id="txid" placeholder="Wklej TXID"
+               onkeypress="if(event.key==='Enter') sprawdzTx()">
+
+        <button onclick="sprawdzTx()">Szukaj</button>
+
+        <div id="status" class="status"></div>
     </div>
+
+    <div id="result"></div>
+
 </div>
 
 <script>
+function hexToString(hex) {
+    let str = '';
+    for (let i = 0; i < hex.length; i += 2) {
+        str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+    }
+    return str;
+}
+
+function safe(val) {
+    return val ?? "-";
+}
+
 function sprawdzTx() {
     const txid = document.getElementById("txid").value.trim();
-    const output = document.getElementById("output");
+    const status = document.getElementById("status");
+    const result = document.getElementById("result");
+
+    result.innerHTML = "";
 
     if (!txid) {
-        output.innerHTML = "❌ Podaj TXID";
+        status.innerHTML = "❌ Podaj TXID";
         return;
     }
 
-    output.innerHTML = "⏳ Ładowanie...";
+    status.innerHTML = "⏳ Ładowanie...";
 
     fetch(`https://api.whatsonchain.com/v1/bsv/test/tx/hash/${txid}`)
         .then(res => {
-            if (!res.ok) throw new Error("Nie znaleziono TX");
+            if (res.status === 404) throw new Error("TX nie istnieje");
+            if (!res.ok) throw new Error("Błąd API");
             return res.json();
         })
         .then(data => {
 
+            if (!data.vout) {
+                throw new Error("Brak vout w transakcji");
+            }
+
             let found = null;
 
             for (let vout of data.vout) {
-                if (vout.scriptPubKey?.opReturn?.parts) {
-                    for (let part of vout.scriptPubKey.opReturn.parts) {
-                        try {
-                            found = JSON.parse(part);
-                            break;
-                        } catch (e) {}
-                    }
+                const parts = vout.scriptPubKey?.opReturn?.parts;
+
+                if (!parts) continue;
+
+                for (let part of parts) {
+                    try {
+                        let decoded = hexToString(part);
+                        found = JSON.parse(decoded);
+                        break;
+                    } catch (e) {}
                 }
+
                 if (found) break;
             }
 
             if (!found) {
-                output.innerHTML = "❌ Brak danych gry";
-                return;
+                throw new Error("Brak danych gry w OP_RETURN");
             }
 
-            output.innerHTML = `
-                <h3>${found.tytul}</h3>
-                ID: ${found.id} <br>
-                Rok: ${found.rok_wydania} <br><br>
-            
-                [OBUDOWA]<br>
-                Kod: ${found.obudowa.kod}<br>
-                Wytłoczenie: ${found.obudowa.kod_wytloczenia}<br>
-                Przód: ${found.obudowa.kod_obudowy_przod}<br>
-                Tył: ${found.obudowa.kod_obudowy_tyl}<br><br>
-            
-                [PCB]<br>
-                Kod PCB: ${found.pcb.kod_pcb}<br><br>
-            
-                [ROM]<br>
-                Kod: ${found.pcb.rom.rom_kod}<br>
-                Producent: ${found.pcb.rom.rom_producent}<br>
-                Data INT: ${found.pcb.rom.rom_data_int}<br>
-                Data Serial: ${found.pcb.rom.rom_data_serial}<br><br>
-            
-                [MBC]<br>
-                Kod: ${found.pcb.mbc.mbc_kod}<br>
-                Data INT: ${found.pcb.mbc.mbc_data_int}<br>
-                Data Serial: ${found.pcb.mbc.mbc_data_serial}<br><br>
-            
-                Metoda inspekcji: ${found.metoda_inspekcji}<br>
-                Data wpisu: ${found.data_wpisu}
+            status.innerHTML = "✅ Znaleziono dane";
+
+            result.innerHTML = `
+                <div class="card">
+                    <h1>${safe(found.tytul)}</h1>
+
+                    <div class="item-attrs-grid">
+
+                        <div class="attr"><span>ID</span><span>${safe(found.id)}</span></div>
+                        <div class="attr"><span>Rok</span><span>${safe(found.rok_wydania)}</span></div>
+
+                        <div class="attr"><span>Obudowa kod</span><span>${safe(found.obudowa?.kod)}</span></div>
+                        <div class="attr"><span>Wytłoczenie</span><span>${safe(found.obudowa?.kod_wytloczenia)}</span></div>
+
+                        <div class="attr"><span>Przód</span><span>${safe(found.obudowa?.kod_obudowy_przod)}</span></div>
+                        <div class="attr"><span>Tył</span><span>${safe(found.obudowa?.kod_obudowy_tyl)}</span></div>
+
+                        <div class="attr"><span>PCB</span><span>${safe(found.pcb?.kod_pcb)}</span></div>
+
+                        <div class="attr"><span>ROM kod</span><span>${safe(found.pcb?.rom?.rom_kod)}</span></div>
+                        <div class="attr"><span>ROM prod</span><span>${safe(found.pcb?.rom?.rom_producent)}</span></div>
+
+                        <div class="attr"><span>ROM INT</span><span>${safe(found.pcb?.rom?.rom_data_int)}</span></div>
+                        <div class="attr"><span>ROM Serial</span><span>${safe(found.pcb?.rom?.rom_data_serial)}</span></div>
+
+                        <div class="attr"><span>MBC kod</span><span>${safe(found.pcb?.mbc?.mbc_kod)}</span></div>
+                        <div class="attr"><span>MBC INT</span><span>${safe(found.pcb?.mbc?.mbc_data_int)}</span></div>
+
+                        <div class="attr"><span>MBC Serial</span><span>${safe(found.pcb?.mbc?.mbc_data_serial)}</span></div>
+
+                        <div class="attr"><span>Inspekcja</span><span>${safe(found.metoda_inspekcji)}</span></div>
+                        <div class="attr"><span>Data</span><span>${safe(found.data_wpisu)}</span></div>
+
+                    </div>
+                </div>
             `;
         })
         .catch(err => {
-            output.innerHTML = "❌ " + err.message;
+            status.innerHTML = "❌ " + err.message;
         });
 }
 </script>
