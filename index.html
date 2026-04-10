@@ -1,29 +1,93 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>GB Blockchain Viewer</title>
-    <style>
-        body { font-family: Arial; padding: 20px; }
-        input { width: 400px; padding: 8px; }
-        button { padding: 8px 12px; }
-        .card {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f4f4f4;
-            border-radius: 8px;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>GB Blockchain Viewer</title>
+
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #0f380f;
+        color: #9bbc0f;
+        font-family: "Courier New", monospace;
+    }
+
+    .container {
+        text-align: center;
+        border: 3px solid #9bbc0f;
+        padding: 30px;
+        background: #306230;
+        box-shadow: 0 0 20px #9bbc0f;
+        width: 600px;
+        max-width: 90%;
+    }
+
+    h1 {
+        margin-bottom: 20px;
+        text-shadow: 0 0 5px #9bbc0f;
+    }
+
+    input {
+        width: 80%;
+        padding: 10px;
+        background: #0f380f;
+        border: 2px solid #9bbc0f;
+        color: #9bbc0f;
+        font-family: inherit;
+    }
+
+    button {
+        margin-top: 10px;
+        padding: 10px 20px;
+        background: #9bbc0f;
+        border: none;
+        color: #0f380f;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #8bac0f;
+    }
+
+    .output {
+        margin-top: 20px;
+        text-align: left;
+        background: #0f380f;
+        padding: 15px;
+        border: 2px solid #9bbc0f;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .blink {
+        animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+        50% { opacity: 0; }
+    }
+</style>
 </head>
+
 <body>
 
-<h1>🎮 GB Blockchain Viewer</h1>
+<div class="container">
+    <h1>🎮 GB Viewer</h1>
 
-<input type="text" id="txid" placeholder="Wklej TXID" 
-       onkeypress="if(event.key==='Enter') sprawdzTx()">
-<button onclick="sprawdzTx()">Szukaj</button>
+    <input type="text" id="txid" placeholder="Wklej TXID"
+           onkeypress="if(event.key==='Enter') sprawdzTx()">
+    <br>
+    <button onclick="sprawdzTx()">Szukaj</button>
 
-<div id="output" class="card">Brak danych</div>
+    <div id="output" class="output">
+        <span class="blink">▌</span>
+    </div>
+</div>
 
 <script>
 function sprawdzTx() {
@@ -31,7 +95,7 @@ function sprawdzTx() {
     const output = document.getElementById("output");
 
     if (!txid) {
-        output.innerHTML = "Podaj TXID!";
+        output.innerHTML = "❌ Podaj TXID";
         return;
     }
 
@@ -39,24 +103,18 @@ function sprawdzTx() {
 
     fetch(`https://api.whatsonchain.com/v1/bsv/test/tx/hash/${txid}`)
         .then(res => {
-            if (!res.ok) throw new Error("Nie znaleziono transakcji");
+            if (!res.ok) throw new Error("Nie znaleziono TX");
             return res.json();
         })
         .then(data => {
 
             let found = null;
 
-            // 🔍 Szukamy OP_RETURN w każdym vout
             for (let vout of data.vout) {
-                if (
-                    vout.scriptPubKey &&
-                    vout.scriptPubKey.opReturn &&
-                    vout.scriptPubKey.opReturn.parts
-                ) {
+                if (vout.scriptPubKey?.opReturn?.parts) {
                     for (let part of vout.scriptPubKey.opReturn.parts) {
                         try {
-                            const parsed = JSON.parse(part);
-                            found = parsed;
+                            found = JSON.parse(part);
                             break;
                         } catch (e) {}
                     }
@@ -65,40 +123,41 @@ function sprawdzTx() {
             }
 
             if (!found) {
-                output.innerHTML = "❌ Nie znaleziono danych JSON w OP_RETURN";
+                output.innerHTML = "❌ Brak danych gry";
                 return;
             }
 
-            // 🎮 Ładne wyświetlenie
             output.innerHTML = `
-                <h2>${found.tytul}</h2>
-                <b>ID:</b> ${found.id} <br>
-                <b>Rok:</b> ${found.rok_wydania} <br><br>
-
-                <h3>Obudowa</h3>
-                Kod: ${found.obudowa.kod} <br>
-                Wytłoczenie: ${found.obudowa.kod_wytloczenia} <br>
-                Przód: ${found.obudowa.kod_obudowy_przod} <br>
-                Tył: ${found.obudowa.kod_obudowy_tyl} <br><br>
-
-                <h3>PCB</h3>
-                Kod PCB: ${found.pcb.kod_pcb} <br><br>
-
-                <h4>ROM</h4>
-                Kod: ${found.pcb.rom.rom_kod} <br>
-                Producent: ${found.pcb.rom.rom_producent} <br>
-                Data: ${found.pcb.rom.rom_data_int} <br><br>
-
-                <h4>MBC</h4>
-                Kod: ${found.pcb.mbc.mbc_kod} <br>
-                Data: ${found.pcb.mbc.mbc_data_int} <br><br>
-
-                <b>Metoda:</b> ${found.metoda_inspekcji} <br>
-                <b>Data wpisu:</b> ${found.data_wpisu}
+                <h3>${found.tytul}</h3>
+                ID: ${found.id} <br>
+                Rok: ${found.rok_wydania} <br><br>
+            
+                [OBUDOWA]<br>
+                Kod: ${found.obudowa.kod}<br>
+                Wytłoczenie: ${found.obudowa.kod_wytloczenia}<br>
+                Przód: ${found.obudowa.kod_obudowy_przod}<br>
+                Tył: ${found.obudowa.kod_obudowy_tyl}<br><br>
+            
+                [PCB]<br>
+                Kod PCB: ${found.pcb.kod_pcb}<br><br>
+            
+                [ROM]<br>
+                Kod: ${found.pcb.rom.rom_kod}<br>
+                Producent: ${found.pcb.rom.rom_producent}<br>
+                Data INT: ${found.pcb.rom.rom_data_int}<br>
+                Data Serial: ${found.pcb.rom.rom_data_serial}<br><br>
+            
+                [MBC]<br>
+                Kod: ${found.pcb.mbc.mbc_kod}<br>
+                Data INT: ${found.pcb.mbc.mbc_data_int}<br>
+                Data Serial: ${found.pcb.mbc.mbc_data_serial}<br><br>
+            
+                > ${found.metoda_inspekcji}<br>
+                Data wpisu: ${found.data_wpisu}
             `;
         })
         .catch(err => {
-            output.innerHTML = "❌ Błąd: " + err.message;
+            output.innerHTML = "❌ " + err.message;
         });
 }
 </script>
