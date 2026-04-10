@@ -204,8 +204,8 @@ function sprawdzTx() {
                     <div class="section-content">
                         Kod: ${safe(found.obudowa?.kod)}<br>
                         Wytłoczenie: ${safe(found.obudowa?.kod_wytloczenia)}<br>
-                        Przód: ${safe(found.obudowa?.kod_obudowy_przod)}<br>
-                        Tył: ${safe(found.obudowa?.kod_obudowy_tyl)}
+                        Przód obudowy: ${safe(found.obudowa?.kod_obudowy_przod)}<br>
+                        Tył obudowy: ${safe(found.obudowa?.kod_obudowy_tyl)}
                     </div>
                 </div>
                 
@@ -221,8 +221,8 @@ function sprawdzTx() {
                     <div class="section-content">
                         Kod: ${safe(found.pcb?.rom?.rom_kod)}<br>
                         Producent: ${safe(found.pcb?.rom?.rom_producent)}<br>
-                        Data INT: ${safe(found.pcb?.rom?.rom_data_int)}<br>
-                        Data Serial: ${safe(found.pcb?.rom?.rom_data_serial)}
+                        Data (interpretacja): ${safe(found.pcb?.rom?.rom_data_int)}<br>
+                        Data (surowa): ${safe(found.pcb?.rom?.rom_data_serial)}
                     </div>
                 </div>
                 
@@ -230,8 +230,8 @@ function sprawdzTx() {
                     <div class="section-title">[MBC]</div>
                     <div class="section-content">
                         Kod: ${safe(found.pcb?.mbc?.mbc_kod)}<br>
-                        Data INT: ${safe(found.pcb?.mbc?.mbc_data_int)}<br>
-                        Data Serial: ${safe(found.pcb?.mbc?.mbc_data_serial)}
+                        Data (interpretacja): ${safe(found.pcb?.mbc?.mbc_data_int)}<br>
+                        Data (surowa): ${safe(found.pcb?.mbc?.mbc_data_serial)}
                     </div>
                 </div>
                 
